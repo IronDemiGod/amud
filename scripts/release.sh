@@ -77,6 +77,7 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - \`coverfix\`: redo \`cover.*\` files and the pictures embedded in .flac / .m4a tracks of an existing library (\`coverfix --help\`).
 - Windows: clearer errors when a save folder cannot be created.
 - Faster: after each download, the next one starts right away; processing, tagging and conversion to FLAC run in the background.
+- \`general.parallel-downloads\`: download several tracks at once (e.g. 3) on a fast connection.
 - Interrupted runs no longer leave half-finished files that the next run skips (temporary \`.part\` names until a file is complete).
 - \`--timings\`: shows how long each stage of a download takes.
 - \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).

@@ -304,6 +304,15 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   track order; amdl waits for them before writing an `.m3u8` and before the final summary.
   ffmpeg runs at lower priority (Windows "below normal", nice 10 elsewhere), so on a
   machine with few cores it yields the CPU to the download; its output is unchanged.
+- **Parallel downloads**: `general.parallel-downloads: 3` downloads three tracks at once
+  (default 1: one after another, as before). A single download from Apple's servers
+  stays far below a fast connection (~100-140 Mbit/s on gigabit Ethernet in tests).
+  Each download runs in a child amdl process (`--download-worker`, hidden) with the same,
+  unchanged download code; its progress bar is discarded, and amdl prints one line per
+  track instead (`Downloaded 41.2 MB at 13.5 MB/s = 108 Mbit/s`). The request, config
+  and tokens included, goes to the child over stdin, never on its command line. At most
+  two ffmpeg conversions run at once. amdl waits for earlier tracks before showing a
+  `--select` prompt.
 - **Safe file names while working**: a track is downloaded to `Song.part.m4a` and ffmpeg
   writes `Song.part.flac`; each is renamed only when complete, so a run stopped halfway
   never leaves a file the next run would skip as "already exists". An `.m4a` left
