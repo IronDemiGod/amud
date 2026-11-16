@@ -4,8 +4,8 @@
 # The tag is created on amud's current commit (which pins the fork's commit).
 # Releases before v0.1.4.2 were on the fork; v0.1.4.1 was removed from there.
 #
-#   scripts/release.sh v0.1.4.1            publish
-#   scripts/release.sh v0.1.4.1 --dry-run  build into ../amud-work/dist/release/ only
+#   scripts/release.sh v0.1.4.3            publish
+#   scripts/release.sh v0.1.4.3 --dry-run  build into ../amud-work/dist/release/ only
 #
 # Tag scheme: v<upstream version>.<fork revision>, e.g. v0.1.4.1, v0.1.4.2,
 # then v0.1.5.1 after rebasing onto upstream v0.1.5. amdl's version check
