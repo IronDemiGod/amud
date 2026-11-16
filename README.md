@@ -298,6 +298,14 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   else ISRC + album name (amdl's FLAC conversion drops the album ID). FLAC pictures are
   rewritten in place with the audio copied untouched. FLAC caps a picture at 16 MB, so
   too-large ones are retried as PNG 5000 → 4000 → … → 1000.
+- **Background conversion**: with `convert.after-download: true`, ffmpeg runs on a
+  background worker while the next track downloads, instead of after each track. Its
+  messages are printed between tracks (`[background] …`); amdl waits for it before
+  writing an `.m3u8` and before the final summary. An `.m4a` left without its converted
+  file (a run stopped mid-conversion) is converted on the next run instead of skipped.
+- **`--timings`**: prints how long each stage of every track took (download, lyrics,
+  defrag, alac-fix, tags) and a summary with the background conversion time, the time
+  spent waiting for it, and the wall time.
 
 ## Credits and licenses
 

@@ -76,6 +76,8 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - Covers: \`artwork.format: "original"\` saves a full-size lossless PNG when Apple refuses the source image (currently always).
 - \`coverfix\`: redo \`cover.*\` files and the pictures embedded in .flac / .m4a tracks of an existing library (\`coverfix --help\`).
 - Windows: clearer errors when a save folder cannot be created.
+- Faster: conversion to FLAC (\`convert.after-download\`) runs in the background while the next track downloads.
+- \`--timings\`: shows how long each stage of a download takes.
 - \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).
 
 ### Files
