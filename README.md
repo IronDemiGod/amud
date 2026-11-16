@@ -394,7 +394,8 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   unchanged download code; its progress bar is discarded, and amdl prints one line per
   track instead (`Downloaded 41.2 MB at 13.5 MB/s = 108 Mbit/s`). The request, config
   and tokens included, goes to the child over stdin, never on its command line. At most
-  two ffmpeg conversions run at once. amdl waits for earlier tracks before showing a
+  ffmpeg conversions run at once per three CPU threads (2 to 6: 2 on a 4-thread laptop,
+  4 on a 12-thread PC); each conversion's settings and output are unchanged. amdl waits for earlier tracks before showing a
   `--select` prompt.
 - **Live progress list**: in a terminal, an album or playlist is shown as a list that
   redraws in place (like `docker pull`), two lines per track: number, title, artist and
@@ -405,6 +406,8 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   progress bar output; the download code is unchanged. Messages of failed tracks are
   printed after the list. Plain output with `--no-live`, `--debug`, `--json`, when the
   output is not a terminal, or when the list contains music videos.
+  Frames are drawn with the cursor hidden and as one synchronized update, so they don't
+  flicker over SSH; messages that would land under the list are kept for failed tracks.
 - **Work folder (`paths.work-dir`, default `"auto"`)**: tracks are downloaded and
   processed (defrag, alac-fix, tags, FLAC) in a work folder, and only the finished file is
   moved to the save folder. `"auto"` uses RAM (`/dev/shm/amdl`) on Linux and the save
