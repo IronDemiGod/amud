@@ -297,4 +297,6 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   and its contributors (original script by Sorrow). Upstream has no license file.
 - wrapper-lite: [WorldObservationLog/wrapper](https://github.com/WorldObservationLog/wrapper), MIT License.
 - QEMU (bundled in the Windows wrapper package): GPL v2, builds from [qemu.weilnetz.de](https://qemu.weilnetz.de/).
+- This repo's own files (scripts and notes): [MIT License](LICENSE). It does not cover
+  the submodules, which keep their own terms.
 - This repo's scripts and notes, and the fork's changes, were written with the help of Claude.
