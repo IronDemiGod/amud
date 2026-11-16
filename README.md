@@ -52,10 +52,79 @@ convert downloads (e.g. to FLAC).
 
 amdl does not decrypt anything itself; it asks wrapper-lite, which has to be running
 and logged in to your Apple ID while you download. It listens on
-`http://127.0.0.1:12340`.
+`http://127.0.0.1:12340`. Pick one way to run it:
+
+| | Native | QEMU (small VM) | Docker |
+|---|---|---|---|
+| **Linux** | **recommended**: no VM, no root, runs in the background | works (KVM) | works |
+| **Windows** | – | **recommended**: a normal program | Docker Desktop (not tested here) |
+| **Mac** | – | works (not tested here) | Docker Desktop |
+
+Ready-made wrapper packages are on the
+[wrapper-lite build runs](https://github.com/WorldObservationLog/wrapper/actions/workflows/build-lite.yml?query=branch%3Alite+is%3Asuccess)
+page (sign in to GitHub, open the newest run, download the artifact named below), or
+build them yourself on Linux with Docker: `scripts/build-wrapper-win.sh` from this repo
+builds every variant into the `wrapper/` submodule (see [Build from source](#build-from-source)).
+
+Whatever you choose, keep the service on `127.0.0.1`: it has no password, and anyone who
+can reach the port can use your account.
 
 <details open>
-<summary><b>Linux</b> (Docker)</summary>
+<summary><b>Linux: native</b> (recommended)</summary>
+
+Runs Apple's Android code directly, in an unprivileged user namespace: no Docker, no
+VM, no root. `scripts/wrapper-linux.sh` from this repo installs it with a small
+`wrapper` command next to it.
+
+1. Get the package **`wrapper-lite-linux-x86_64`** and unzip it, e.g. to
+   `~/Downloads/wrapper-lite-linux-x86_64` (or build it, see above).
+2. Install it, e.g. into `~/amdl` (the folder where amdl lives):
+   ```bash
+   git clone https://github.com/IronDemiGod/amud && cd amud
+   scripts/wrapper-linux.sh install ~/amdl --from ~/Downloads/wrapper-lite-linux-x86_64
+   # self-built instead: scripts/wrapper-linux.sh install ~/amdl
+   ```
+3. Log in once. It asks for your Apple ID, the password (hidden) and, with two-factor
+   authentication, the code Apple shows you:
+   ```bash
+   ~/amdl/wrapper login
+   ```
+4. Start it in the background whenever you want to download:
+   ```bash
+   ~/amdl/wrapper            # same as: ~/amdl/wrapper start
+   ~/amdl/wrapper status     # running?   ~/amdl/wrapper log   follow the log
+   ~/amdl/wrapper stop
+   ```
+
+The login is stored in `~/amdl/wrapper-lite/rootfs/data`, readable only by you. Running
+`install` again updates the program and keeps the login. `WRAPPER_PORT=12341 ~/amdl/wrapper`
+uses another port.
+
+If `start` fails with `unshare: Operation not permitted`, your system blocks
+unprivileged user namespaces (Ubuntu 23.10 and later do by default through AppArmor).
+Either allow them (`sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0`, add it
+to `/etc/sysctl.d/` to keep it), or use QEMU or Docker below.
+</details>
+
+<details>
+<summary><b>Linux: QEMU</b></summary>
+
+Boots a tiny VM; fast with KVM (being in the `kvm` group is enough). Get the package
+**`wrapper-lite-qemu-linux-x86_64`** (it includes QEMU), or after
+`scripts/build-wrapper-win.sh` use the `wrapper/` folder with the system's
+`qemu-system-x86_64`:
+
+```bash
+cd ~/amdl/wrapper-lite-qemu
+./wrapper-lite-qemu --login 'you@example.com:your-apple-id-password'   # once; asks for the 2FA code
+./wrapper-lite-qemu                                                    # start; Ctrl+C stops it
+```
+
+The login is kept in `qemu/data.img`. The VM's port is forwarded to `127.0.0.1` only.
+</details>
+
+<details>
+<summary><b>Linux: Docker</b></summary>
 
 The first start logs in and stores the login in `wrapper-data/`:
 
@@ -74,21 +143,20 @@ into …/2fa.txt`. Within 10 minutes, write the code Apple shows you into
 `echo 123456 | sudo tee ~/amdl/wrapper-data/2fa.txt`.
 
 Once the log says `wrapper-lite listening`, it is ready. The login is cached, so to
-get rid of the password in the container settings, recreate it without it:
+get rid of the password in the container settings, recreate it without it, and make
+the stored login readable only by root:
 
 ```bash
 docker rm -f wrapper-lite
 docker run -d --name wrapper-lite --privileged --restart unless-stopped \
   -p 127.0.0.1:12340:12340 -v "$PWD/wrapper-data:/app/rootfs/data" \
   ghcr.io/worldobservationlog/wrapper-lite:latest
+sudo chmod -R go-rwx ~/amdl/wrapper-data
 ```
-
-Keep `-p 127.0.0.1:…`: the service has no password, and publishing the port on all
-interfaces would let anyone on your network use your account.
 </details>
 
 <details open>
-<summary><b>Windows</b> (native, no Docker or WSL)</summary>
+<summary><b>Windows: QEMU</b> (recommended, no Docker or WSL)</summary>
 
 wrapper-lite runs Apple's Android code, so on Windows it starts a tiny Linux VM
 through QEMU. You start it like a normal program.
@@ -98,20 +166,14 @@ through QEMU. You start it like a normal program.
    ```powershell
    Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform
    ```
-2. **Get the wrapper-lite package** (~150 MB), either:
-   - **ready-made:** sign in to GitHub, open the
-     [wrapper-lite build runs](https://github.com/WorldObservationLog/wrapper/actions/workflows/build-lite.yml?query=branch%3Alite+is%3Asuccess),
-     open the newest one and download the artifact **`wrapper-lite-qemu-windows-x86_64`**; or
-   - **build it yourself** on any Linux machine with Docker:
-     `scripts/build-wrapper-win.sh` from this repo (see [Build from source](#build-from-source)).
-     That package also has `login.bat` and `start-wrapper.bat`.
-
-   Unzip it, e.g. to `C:\amdl\wrapper-lite`.
+2. **Get the package** **`wrapper-lite-qemu-windows-x86_64`** (~150 MB), or build it
+   with `scripts/build-wrapper-win.sh`; that self-built package also has `login.bat`
+   and `start-wrapper.bat`. Unzip it, e.g. to `C:\amdl\wrapper-lite`.
 3. **Log in once**, in PowerShell in that folder (type the 2FA code when asked):
    ```powershell
    .\wrapper-lite-qemu.exe --login "you@example.com:your-apple-id-password"
    ```
-   It stores the login and exits. (With the self-built package: run `login.bat`.)
+   It stores the login and exits. (Self-built package: run `login.bat`.)
 4. **Start it** whenever you want to download, and keep the window open:
    ```powershell
    .\wrapper-lite-qemu.exe --smp 1 --memory 512
@@ -120,17 +182,35 @@ through QEMU. You start it like a normal program.
 </details>
 
 <details>
-<summary><b>Mac</b></summary>
+<summary><b>Windows: Docker</b> (Docker Desktop)</summary>
 
-Use Docker Desktop with the Linux commands above, or the QEMU launcher: download the
-`wrapper-lite-qemu-macos-aarch64` artifact from the same
-[build runs](https://github.com/WorldObservationLog/wrapper/actions/workflows/build-lite.yml?query=branch%3Alite+is%3Asuccess)
-and use `./wrapper-lite-qemu --login "email:password"`, then `./wrapper-lite-qemu`.
-Not tested with this fork.
+With Docker Desktop (WSL 2 backend), the Linux Docker commands work in PowerShell with
+Windows paths. Not tested with this fork.
+
+```powershell
+mkdir C:\amdl\wrapper-data; cd C:\amdl
+docker run -d --name wrapper-lite --privileged --restart unless-stopped `
+  -p 127.0.0.1:12340:12340 -v "${PWD}\wrapper-data:/app/rootfs/data" `
+  -e USERNAME='you@example.com' -e PASSWORD='your-apple-id-password' `
+  ghcr.io/worldobservationlog/wrapper-lite:latest
+docker logs -f wrapper-lite
+```
+
+For a 2FA code, write it into `C:\amdl\wrapper-data\2fa.txt` within 10 minutes. Once
+the log says `wrapper-lite listening`, recreate the container without `-e USERNAME` and
+`-e PASSWORD`, as on Linux.
 </details>
 
-Check that it is up: open <http://127.0.0.1:12340/status> in a browser. It should
-answer with `"msg":"SUCCESS"`.
+<details>
+<summary><b>Mac</b></summary>
+
+Use Docker Desktop with the Linux Docker commands, or the QEMU package
+**`wrapper-lite-qemu-macos-aarch64`**: `./wrapper-lite-qemu --login "email:password"`,
+then `./wrapper-lite-qemu`. Not tested with this fork.
+</details>
+
+Check that it is up: open <http://127.0.0.1:12340/status> in a browser (or
+`curl http://127.0.0.1:12340/status`). It should answer with `"msg":"SUCCESS"`.
 
 ### 3. First run and config
 
@@ -229,10 +309,13 @@ cd amud
 scripts/build-amdl.sh               # needs Go 1.23+; builds into ../amud-work/dist and sets up ../amud-work/run
 scripts/build-wrapper-win.sh        # needs Docker; builds ../amud-work/dist/wrapper-lite-win (first run ~1 GB of downloads)
 scripts/deploy-windows.sh <folder>  # copy the newest release build (or --local) + wrapper to a Windows folder
+scripts/wrapper-linux.sh install <folder>   # install the native Linux wrapper-lite (see step 2 above)
 ```
 
 `build-wrapper-win.sh` builds everything inside a throwaway Ubuntu container, boots the
-VM once as a test, and adds QEMU for Windows. On Linux, `../amud-work/run/` then holds a
+VM once as a test, and adds QEMU for Windows. It also leaves the Linux builds in the
+`wrapper/` submodule folder: the native `wrapper-lite-rootless` with `rootfs/` (what
+`wrapper-linux.sh install` takes) and `wrapper-lite-qemu` with `qemu/`. On Linux, `../amud-work/run/` then holds a
 `config.yaml` and links to the builds: `cd ../amud-work/run && ./amdl <url>`.
 
 Everything the scripts produce goes to `amud-work/` next to the repo, so the repo folder
@@ -242,7 +325,7 @@ stays identical to what is on GitHub. Set `AMUD_WORK=/some/folder` to use anothe
 amud/
 ├── apple-music-downloader/   submodule: the amdl fork, branch main
 ├── wrapper/                  submodule: WorldObservationLog/wrapper, branch lite (unmodified)
-└── scripts/                  build-amdl.sh, build-wrapper-win.sh, deploy-windows.sh, release.sh
+└── scripts/                  build-amdl.sh, build-wrapper-win.sh, deploy-windows.sh, release.sh, wrapper-linux.sh
 
 amud-work/                    next to the repo, not in git (AMUD_WORK to move it)
 ├── dist/                     build outputs
