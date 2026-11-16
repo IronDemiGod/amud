@@ -78,6 +78,7 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - Windows: clearer errors when a save folder cannot be created.
 - Faster: after each download, the next one starts right away; processing, tagging and conversion to FLAC run in the background.
 - \`general.parallel-downloads\`: download several tracks at once (e.g. 3) on a fast connection.
+- Live progress list for albums and playlists, with quality, progress and speed per track (\`--no-live\` for plain output).
 - Interrupted runs no longer leave half-finished files that the next run skips (temporary \`.part\` names until a file is complete).
 - \`--timings\`: shows how long each stage of a download takes.
 - \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).

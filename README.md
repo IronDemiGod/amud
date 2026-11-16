@@ -313,6 +313,15 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   and tokens included, goes to the child over stdin, never on its command line. At most
   two ffmpeg conversions run at once. amdl waits for earlier tracks before showing a
   `--select` prompt.
+- **Live progress list**: in a terminal, an album or playlist is shown as a list that
+  redraws in place (like `docker pull`), two lines per track: number, title, artist and
+  quality (e.g. `ALAC 24-bit/96 kHz`), then a bar with %, size and speed, or the step
+  (processing, converting), `✔ done` or `✖` with the reason. The header shows the tracks
+  done and the combined download speed. A long list folds its finished tracks into one
+  line so it always fits the window. Progress is read from the download worker's
+  progress bar output; the download code is unchanged. Messages of failed tracks are
+  printed after the list. Plain output with `--no-live`, `--debug`, `--json`, when the
+  output is not a terminal, or when the list contains music videos.
 - **Safe file names while working**: a track is downloaded to `Song.part.m4a` and ffmpeg
   writes `Song.part.flac`; each is renamed only when complete, so a run stopped halfway
   never leaves a file the next run would skip as "already exists". An `.m4a` left
