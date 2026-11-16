@@ -410,8 +410,12 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   flicker over SSH; messages that would land under the list are kept for failed tracks.
 - **Work folder (`paths.work-dir`, default `"auto"`)**: tracks are downloaded and
   processed (defrag, alac-fix, tags, FLAC) in a work folder, and only the finished file is
-  moved to the save folder. `"auto"` uses RAM (`/dev/shm/amdl`) on Linux and the save
-  folder elsewhere; `""` always uses the save folder; any other value is a folder (a fast
+  moved to the save folder. `"auto"` uses RAM (`/dev/shm/amdl`) on Linux; on Windows a
+  hidden `.amdl-work` folder in the save folder whose files carry the temporary attribute,
+  so Windows keeps them in memory and, being on the same drive, the finished file is moved
+  by a rename: only it is written to disk (defrag skips its sync for such files; the tag
+  library's own short-lived temp copy is the one file outside amdl's control). Elsewhere
+  it works in the save folder; `""` always uses the save folder; any other value is a folder (a fast
   SSD, or a RAM disk like `R:/amdl` on Windows). On a slow save folder this saves several
   full rewrites per track: a hi-res album on a USB NTFS drive (ntfs-3g) spent most of its
   time there. Moves across drives go through a `.part` name. A track falls back to the
