@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the native-Windows wrapper-lite package (QEMU launcher + guest VM)
-# into dist/wrapper-lite-win/. Needs Docker; nothing is installed on the host.
+# into ../amud-work/dist/wrapper-lite-win/. Needs Docker; nothing is installed on the host.
 #
 # Steps: compile lite + guest kernel/initramfs/data.img and the Windows
 # launcher in an Ubuntu 24.04 container, boot the guest once as a smoke test,
@@ -12,9 +12,12 @@
 # upstream CI uses, is put in place instead.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Build outputs, downloads and the Linux run folder live outside the repo, in
+# ../amud-work next to it (override with AMUD_WORK=/some/folder).
+WORK="${AMUD_WORK:-$(dirname "$ROOT")/amud-work}"
 SRC="$ROOT/wrapper"
-CACHE="$ROOT/.cache"
-OUT="$ROOT/dist/wrapper-lite-win"
+CACHE="$WORK/cache"
+OUT="$WORK/dist/wrapper-lite-win"
 QEMU_VER="${QEMU_VER:-20260811}"   # see https://qemu.weilnetz.de/w64/
 mkdir -p "$CACHE"
 

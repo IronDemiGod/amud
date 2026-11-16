@@ -1,4 +1,5 @@
-# Build outputs, downloads and personal data (config, login tokens)
+# Build outputs, downloads and personal data (config, login tokens) live in
+# ../amud-work, outside the repo. These stay ignored in case they reappear here.
 /dist/
 /run/
 /rootfs/

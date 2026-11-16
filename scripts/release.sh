@@ -5,7 +5,7 @@
 # Releases before v0.1.4.2 were on the fork; v0.1.4.1 was removed from there.
 #
 #   scripts/release.sh v0.1.4.1            publish
-#   scripts/release.sh v0.1.4.1 --dry-run  build into dist/release/ only
+#   scripts/release.sh v0.1.4.1 --dry-run  build into ../amud-work/dist/release/ only
 #
 # Tag scheme: v<upstream version>.<fork revision>, e.g. v0.1.4.1, v0.1.4.2,
 # then v0.1.5.1 after rebasing onto upstream v0.1.5. amdl's version check
@@ -23,6 +23,9 @@ DRY="${2:-}"
 [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "tag must look like v0.1.4.1"; exit 2; }
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Build outputs, downloads and the Linux run folder live outside the repo, in
+# ../amud-work next to it (override with AMUD_WORK=/some/folder).
+WORK="${AMUD_WORK:-$(dirname "$ROOT")/amud-work}"
 SRC="$ROOT/apple-music-downloader"
 cd "$SRC"
 slug() { sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##' <<<"$1"; }
@@ -51,7 +54,7 @@ LDFLAGS="-s -w -X 'amdl/internal/version.Version=$TAG' -X 'amdl/internal/version
 echo "[release] testing..."
 go test ./internal/... ./cmd/... >/dev/null
 
-OUT="$ROOT/dist/release/$TAG"
+OUT="$WORK/dist/release/$TAG"
 rm -rf "$OUT" && mkdir -p "$OUT"
 for target in linux/amd64 linux/arm64 windows/amd64 windows/arm64 darwin/amd64 darwin/arm64; do
   os="${target%/*}"; arch="${target#*/}"; ext=""

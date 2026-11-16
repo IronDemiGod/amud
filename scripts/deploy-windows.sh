@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
-# Copies the Windows builds from dist/ to a Windows folder, e.g. one on a
+# Copies the Windows builds from ../amud-work/dist/ to a Windows folder, e.g. one on a
 # drive shared with Windows:  scripts/deploy-windows.sh /mnt/d/amud
 # Never overwrites config.yaml or the wrapper's qemu/data.img, which holds the
 # Apple login tokens.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Build outputs, downloads and the Linux run folder live outside the repo, in
+# ../amud-work next to it (override with AMUD_WORK=/some/folder).
+WORK="${AMUD_WORK:-$(dirname "$ROOT")/amud-work}"
 DEST="${1:?usage: deploy-windows.sh <windows folder>}"
 mkdir -p "$DEST/wrapper-lite/qemu"
 
-cp "$ROOT/dist/windows/amdl.exe" "$ROOT/dist/windows/coverfix.exe" "$DEST/"
+cp "$WORK/dist/windows/amdl.exe" "$WORK/dist/windows/coverfix.exe" "$DEST/"
 echo "[deploy] amdl.exe, coverfix.exe"
 
-if [ -d "$ROOT/dist/wrapper-lite-win" ]; then
-  W="$ROOT/dist/wrapper-lite-win"
+if [ -d "$WORK/dist/wrapper-lite-win" ]; then
+  W="$WORK/dist/wrapper-lite-win"
   (cd "$W" && tar --exclude=./qemu/data.img -cf - .) | (cd "$DEST/wrapper-lite" && tar -xf -)
   if [ ! -f "$DEST/wrapper-lite/qemu/data.img" ]; then
     cp "$W/qemu/data.img" "$DEST/wrapper-lite/qemu/data.img"

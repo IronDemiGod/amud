@@ -226,23 +226,28 @@ This repo is a workspace: build scripts and these notes, with the two source tre
 ```bash
 git clone --recurse-submodules https://github.com/IronDemiGod/amud
 cd amud
-scripts/build-amdl.sh               # needs Go 1.23+; builds dist/linux, dist/windows and sets up run/
-scripts/build-wrapper-win.sh        # needs Docker; builds dist/wrapper-lite-win (first run ~1 GB of downloads)
+scripts/build-amdl.sh               # needs Go 1.23+; builds into ../amud-work/dist and sets up ../amud-work/run
+scripts/build-wrapper-win.sh        # needs Docker; builds ../amud-work/dist/wrapper-lite-win (first run ~1 GB of downloads)
 scripts/deploy-windows.sh <folder>  # copy the Windows builds to a folder Windows can reach
 ```
 
 `build-wrapper-win.sh` builds everything inside a throwaway Ubuntu container, boots the
-VM once as a test, and adds QEMU for Windows. On Linux, `run/` then holds a
-`config.yaml` and links to the builds: `cd run && ./amdl <url>`.
+VM once as a test, and adds QEMU for Windows. On Linux, `../amud-work/run/` then holds a
+`config.yaml` and links to the builds: `cd ../amud-work/run && ./amdl <url>`.
+
+Everything the scripts produce goes to `amud-work/` next to the repo, so the repo folder
+stays identical to what is on GitHub. Set `AMUD_WORK=/some/folder` to use another place.
 
 ```
 amud/
 ├── apple-music-downloader/   submodule: the amdl fork, branch main
 ├── wrapper/                  submodule: WorldObservationLog/wrapper, branch lite (unmodified)
-├── scripts/                  build-amdl.sh, build-wrapper-win.sh, deploy-windows.sh, release.sh
-├── dist/                     build outputs        [not in git]
-├── run/                      config + links       [not in git]
-└── .cache/                   build downloads      [not in git]
+└── scripts/                  build-amdl.sh, build-wrapper-win.sh, deploy-windows.sh, release.sh
+
+amud-work/                    next to the repo, not in git (AMUD_WORK to move it)
+├── dist/                     build outputs
+├── run/                      config + links to the Linux builds
+└── cache/                    build downloads
 ```
 
 ## Development

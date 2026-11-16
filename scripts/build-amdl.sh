@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Builds amdl and coverfix for Linux and Windows (amd64) into dist/.
+# Builds amdl and coverfix for Linux and Windows (amd64) into ../amud-work/dist/.
 #   dist/linux/{amdl,coverfix}   dist/windows/{amdl.exe,coverfix.exe}
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Build outputs, downloads and the Linux run folder live outside the repo, in
+# ../amud-work next to it (override with AMUD_WORK=/some/folder).
+WORK="${AMUD_WORK:-$(dirname "$ROOT")/amud-work}"
 SRC="$ROOT/apple-music-downloader"
 cd "$SRC"
 COMMIT="$(git rev-parse --short HEAD)"
@@ -11,24 +14,24 @@ COMMIT="$(git rev-parse --short HEAD)"
 SLUG="$(git -C "$ROOT" remote get-url origin | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"
 LDFLAGS="-s -w -X 'amdl/internal/version.Commit=$COMMIT' \
 -X 'amdl/internal/updater.RepoOwner=${SLUG%%/*}' -X 'amdl/internal/updater.RepoName=${SLUG##*/}'"
-mkdir -p "$ROOT/dist/linux" "$ROOT/dist/windows"
+mkdir -p "$WORK/dist/linux" "$WORK/dist/windows"
 
 echo "[amdl] testing..."
 go test ./internal/... ./cmd/... >/dev/null
 
 echo "[amdl] building linux..."
-go build -trimpath -ldflags="$LDFLAGS" -o "$ROOT/dist/linux/amdl" .
-go build -trimpath -ldflags="-s -w" -o "$ROOT/dist/linux/coverfix" ./cmd/coverfix
+go build -trimpath -ldflags="$LDFLAGS" -o "$WORK/dist/linux/amdl" .
+go build -trimpath -ldflags="-s -w" -o "$WORK/dist/linux/coverfix" ./cmd/coverfix
 
 echo "[amdl] building windows..."
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="$LDFLAGS" -o "$ROOT/dist/windows/amdl.exe" .
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o "$ROOT/dist/windows/coverfix.exe" ./cmd/coverfix
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="$LDFLAGS" -o "$WORK/dist/windows/amdl.exe" .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o "$WORK/dist/windows/coverfix.exe" ./cmd/coverfix
 
 # run/ is where amdl is used on Linux: config.yaml plus links to the builds.
-mkdir -p "$ROOT/run"
-[ -f "$ROOT/run/config.yaml" ] || cp "$SRC/config.yaml.example" "$ROOT/run/config.yaml"
-ln -sfn ../dist/linux/amdl "$ROOT/run/amdl"
-ln -sfn ../dist/linux/coverfix "$ROOT/run/coverfix"
+mkdir -p "$WORK/run"
+[ -f "$WORK/run/config.yaml" ] || cp "$SRC/config.yaml.example" "$WORK/run/config.yaml"
+ln -sfn ../dist/linux/amdl "$WORK/run/amdl"
+ln -sfn ../dist/linux/coverfix "$WORK/run/coverfix"
 
 echo "[amdl] done (commit $COMMIT):"
-ls -l "$ROOT/dist/linux" "$ROOT/dist/windows"
+ls -l "$WORK/dist/linux" "$WORK/dist/windows"
