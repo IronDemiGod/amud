@@ -395,7 +395,8 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   track instead (`Downloaded 41.2 MB at 13.5 MB/s = 108 Mbit/s`). The request, config
   and tokens included, goes to the child over stdin, never on its command line. At most
   ffmpeg conversions run at once per three CPU threads (2 to 6: 2 on a 4-thread laptop,
-  4 on a 12-thread PC); each conversion's settings and output are unchanged. amdl waits for earlier tracks before showing a
+  4 on a 12-thread PC; `convert.parallel` sets it, 0 = this automatic rule); each
+  conversion's settings and output are unchanged. amdl waits for earlier tracks before showing a
   `--select` prompt.
 - **Live progress list**: in a terminal, an album or playlist is shown as a list that
   redraws in place (like `docker pull`), two lines per track: number, title, artist and
