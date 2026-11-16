@@ -14,7 +14,7 @@ What the fork adds:
   does), a full-size PNG is saved instead of Apple's re-compressed JPEG.
 - **coverfix**: re-downloads the covers of an existing library and replaces the
   pictures embedded in its `.flac` and `.m4a` files.
-- **`amdl --update`** updates from this fork's releases.
+- **`amdl --update`** updates from this repo's releases.
 
 > Use this only with content you are entitled to access, and in line with Apple's
 > terms and the law where you live. You need an Apple ID with an active Apple Music
@@ -26,7 +26,7 @@ Three parts: amdl (+ coverfix), wrapper-lite, and a config file.
 
 ### 1. Download amdl and coverfix
 
-Get them from the **[latest release](https://github.com/IronDemiGod/apple-music-downloader/releases/latest)**:
+Get them from the **[latest release](https://github.com/IronDemiGod/amud/releases/latest)**:
 
 | Your computer | amdl | coverfix |
 |---|---|---|
@@ -202,10 +202,10 @@ Without a size you get the largest Apple has. coverfix works on folders made by 
 ### Updating
 
 ```bash
-./amdl --update        # installs the latest release of this fork
+./amdl --update        # installs the latest release from this repo
 ```
 
-coverfix: download the new file from the [releases](https://github.com/IronDemiGod/apple-music-downloader/releases).
+coverfix: download the new file from the [releases](https://github.com/IronDemiGod/amud/releases).
 
 ## Troubleshooting
 
@@ -264,8 +264,11 @@ git push --force-with-lease origin main
 cd .. && git commit -am "Bump amdl" && git push
 ```
 
-**Release:** `scripts/release.sh v0.1.4.2` builds all platforms and publishes them on the
-fork (`--dry-run` to only build). Tags are `v<upstream version>.<fork revision>`;
+**Release:** `scripts/release.sh v0.1.4.3` builds all platforms and publishes them as a
+release of **this repo (amud)**, not the fork (`--dry-run` to only build). The tag goes on
+amud's current commit, and the binaries have amud built in as their `--update` source.
+Releases before v0.1.4.2 were on the fork; v0.1.4.1 was removed, so its binaries cannot
+`--update` (replace them by hand). Tags are `v<upstream version>.<fork revision>`;
 after rebasing onto upstream v0.1.5 the next one is `v0.1.5.1`. The wrapper-lite
 package is not released: it contains Apple's proprietary libraries and GPL'd QEMU
 binaries; build it with `build-wrapper-win.sh`.

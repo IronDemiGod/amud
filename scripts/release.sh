@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Builds amdl and coverfix for all platforms and publishes them as a GitHub
-# release on the amdl fork (the submodule's origin).
+# Builds amdl and coverfix from the amdl fork (the submodule) for all platforms
+# and publishes them as a GitHub release of THIS repo (amud), not of the fork.
+# The tag is created on amud's current commit (which pins the fork's commit).
+# Releases before v0.1.4.2 were on the fork; v0.1.4.1 was removed from there.
 #
 #   scripts/release.sh v0.1.4.1            publish
 #   scripts/release.sh v0.1.4.1 --dry-run  build into dist/release/ only
@@ -9,8 +11,9 @@
 # then v0.1.5.1 after rebasing onto upstream v0.1.5. amdl's version check
 # ignores "-suffixes", so the revision has to be a fourth number.
 #
-# The binaries have this fork baked in as their update source, so
-# `amdl --update` installs the fork's releases rather than upstream's.
+# The binaries have amud baked in as their update source, so `amdl --update`
+# installs amud's releases rather than upstream's (the update source must be the
+# repo the release is published on).
 # The wrapper-lite package is deliberately not released: it contains Apple's
 # proprietary libraries and GPL'd QEMU binaries. Build it with
 # build-wrapper-win.sh instead.
@@ -22,8 +25,9 @@ DRY="${2:-}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/apple-music-downloader"
 cd "$SRC"
-ORIGIN="$(git remote get-url origin)"
-SLUG="$(sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##' <<<"$ORIGIN")"
+slug() { sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##' <<<"$1"; }
+FORK="$(slug "$(git remote get-url origin)")"            # where the source lives
+SLUG="$(slug "$(git -C "$ROOT" remote get-url origin)")" # where releases go (amud)
 OWNER="${SLUG%%/*}"; NAME="${SLUG##*/}"
 
 if [ -z "$DRY" ]; then
@@ -31,6 +35,11 @@ if [ -z "$DRY" ]; then
   git fetch -q origin
   [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "amdl HEAD is not origin/main; push first"; exit 1; }
   ! gh release view "$TAG" --repo "$SLUG" >/dev/null 2>&1 || { echo "release $TAG already exists"; exit 1; }
+  [ -z "$(git -C "$ROOT" status --porcelain)" ] || { echo "amud has uncommitted changes; commit them first"; exit 1; }
+  git -C "$ROOT" fetch -q origin
+  [ "$(git -C "$ROOT" rev-parse HEAD)" = "$(git -C "$ROOT" rev-parse origin/main)" ] || { echo "amud HEAD is not origin/main; push first"; exit 1; }
+  [ "$(git -C "$ROOT" ls-tree HEAD apple-music-downloader | awk '{print $3}')" = "$(git rev-parse HEAD)" ] \
+    || { echo "amud's submodule pointer is not the fork's HEAD; commit and push amud first"; exit 1; }
 fi
 
 SHA="$(git rev-parse HEAD)"
@@ -55,7 +64,7 @@ done
 
 BASE="$(git describe --tags --abbrev=0 "$(git merge-base HEAD upstream/main)" 2>/dev/null || echo upstream)"
 cat > "$OUT/NOTES.md" <<NOTES
-Builds of [this fork](https://github.com/$SLUG) of zhaarey/apple-music-downloader, based on upstream **$BASE** (commit \`${SHA:0:7}\`).
+Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloader, based on upstream **$BASE** (commit \`${SHA:0:7}\`).
 
 **Install and setup guide:** https://github.com/$OWNER/amud#install
 
@@ -64,7 +73,7 @@ Builds of [this fork](https://github.com/$SLUG) of zhaarey/apple-music-downloade
 - Covers: \`artwork.format: "original"\` saves a full-size lossless PNG when Apple refuses the source image (currently always).
 - \`coverfix\`: redo \`cover.*\` files and the pictures embedded in .flac / .m4a tracks of an existing library (\`coverfix --help\`).
 - Windows: clearer errors when a save folder cannot be created.
-- \`amdl --update\` updates from this fork's releases.
+- \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).
 
 ### Files
 | | amdl | coverfix |
@@ -82,6 +91,6 @@ NOTES
 
 ls -l "$OUT"
 if [ -n "$DRY" ]; then echo "[release] dry run: nothing published"; exit 0; fi
-gh release create "$TAG" --repo "$SLUG" --target "$SHA" --title "$TAG" --notes-file "$OUT/NOTES.md" \
+gh release create "$TAG" --repo "$SLUG" --target "$(git -C "$ROOT" rev-parse HEAD)" --title "$TAG" --notes-file "$OUT/NOTES.md" \
   "$OUT"/amdl_* "$OUT"/coverfix_* "$OUT/checksums.txt"
 echo "[release] published: https://github.com/$SLUG/releases/tag/$TAG"

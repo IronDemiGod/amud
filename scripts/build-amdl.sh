@@ -6,9 +6,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/apple-music-downloader"
 cd "$SRC"
 COMMIT="$(git rev-parse --short HEAD)"
-# Bake in the fork (the submodule's origin) as update source, so `amdl --update`
-# on a local build installs the fork's releases, not upstream's.
-SLUG="$(git remote get-url origin | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"
+# Bake in amud (this repo, where releases are published) as update source, so
+# `amdl --update` on a local build installs amud's releases, not upstream's.
+SLUG="$(git -C "$ROOT" remote get-url origin | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"
 LDFLAGS="-s -w -X 'amdl/internal/version.Commit=$COMMIT' \
 -X 'amdl/internal/updater.RepoOwner=${SLUG%%/*}' -X 'amdl/internal/updater.RepoName=${SLUG##*/}'"
 mkdir -p "$ROOT/dist/linux" "$ROOT/dist/windows"
