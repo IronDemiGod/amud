@@ -302,6 +302,8 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   away; defrag, alac-fix, tagging and the optional ffmpeg conversion run on two
   background workers. Their messages are printed between tracks (`[background] …`), in
   track order; amdl waits for them before writing an `.m3u8` and before the final summary.
+  ffmpeg runs at lower priority (Windows "below normal", nice 10 elsewhere), so on a
+  machine with few cores it yields the CPU to the download; its output is unchanged.
 - **Safe file names while working**: a track is downloaded to `Song.part.m4a` and ffmpeg
   writes `Song.part.flac`; each is renamed only when complete, so a run stopped halfway
   never leaves a file the next run would skip as "already exists". An `.m4a` left
