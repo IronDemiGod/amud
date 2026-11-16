@@ -405,6 +405,16 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   progress bar output; the download code is unchanged. Messages of failed tracks are
   printed after the list. Plain output with `--no-live`, `--debug`, `--json`, when the
   output is not a terminal, or when the list contains music videos.
+- **Work folder (`paths.work-dir`, default `"auto"`)**: tracks are downloaded and
+  processed (defrag, alac-fix, tags, FLAC) in a work folder, and only the finished file is
+  moved to the save folder. `"auto"` uses RAM (`/dev/shm/amdl`) on Linux and the save
+  folder elsewhere; `""` always uses the save folder; any other value is a folder (a fast
+  SSD, or a RAM disk like `R:/amdl` on Windows). On a slow save folder this saves several
+  full rewrites per track: a hi-res album on a USB NTFS drive (ntfs-3g) spent most of its
+  time there. Moves across drives go through a `.part` name. A track falls back to the
+  save folder when the work folder has less than ~512 MB per track in progress free. Each
+  run uses its own subfolder, removed at the end; folders of killed runs are removed by
+  the next run.
 - **Safe file names while working**: a track is downloaded to `Song.part.m4a` and ffmpeg
   writes `Song.part.flac`; each is renamed only when complete, so a run stopped halfway
   never leaves a file the next run would skip as "already exists". An `.m4a` left
