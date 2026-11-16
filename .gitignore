@@ -1,0 +1,6 @@
+# Build outputs, downloads and personal data (config, login tokens)
+/dist/
+/run/
+/rootfs/
+/.cache/
+*.log

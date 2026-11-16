@@ -1,0 +1,8 @@
+[submodule "apple-music-downloader"]
+	path = apple-music-downloader
+	url = https://github.com/IronDemiGod/apple-music-downloader.git
+	branch = main
+[submodule "wrapper"]
+	path = wrapper
+	url = https://github.com/WorldObservationLog/wrapper.git
+	branch = lite
