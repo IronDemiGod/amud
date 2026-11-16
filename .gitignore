@@ -4,3 +4,6 @@
 /rootfs/
 /.cache/
 *.log
+
+# Local Claude Code notes
+/CLAUDE.local.md
