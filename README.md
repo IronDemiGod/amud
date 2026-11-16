@@ -308,7 +308,7 @@ git clone --recurse-submodules https://github.com/IronDemiGod/amud
 cd amud
 scripts/build-amdl.sh               # needs Go 1.23+; builds into ../amud-work/dist and sets up ../amud-work/run
 scripts/build-wrapper-win.sh        # needs Docker; builds ../amud-work/dist/wrapper-lite-win (first run ~1 GB of downloads)
-scripts/deploy-windows.sh <folder>  # copy the newest release build (or --local) + wrapper to a Windows folder
+scripts/deploy-windows.sh <folder>  # copy the newest release build (or --local; --wrapper adds the wrapper package)
 scripts/wrapper-linux.sh install <folder>   # install the native Linux wrapper-lite (see step 2 above)
 ```
 

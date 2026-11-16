@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Copies the Windows builds from ../amud-work/dist/ to a Windows folder, e.g. one on a
 # drive shared with Windows:
-#   scripts/deploy-windows.sh /mnt/d/amud           newest release build (dist/release/)
-#   scripts/deploy-windows.sh /mnt/d/amud --local   local build (dist/windows/)
+#   scripts/deploy-windows.sh /mnt/d/amud             newest release build (dist/release/)
+#   scripts/deploy-windows.sh /mnt/d/amud --local     local build (dist/windows/)
+#   scripts/deploy-windows.sh /mnt/d/amud --wrapper   also the wrapper-lite package
+#                                                     (dist/wrapper-lite-win/, if built)
 # Release builds are the default: only they carry a version number, which
 # `amdl --update` needs to tell whether a newer release exists. A local build
 # reports "dev", so its --update always reinstalls the latest release.
@@ -13,8 +15,17 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Build outputs, downloads and the Linux run folder live outside the repo, in
 # ../amud-work next to it (override with AMUD_WORK=/some/folder).
 WORK="${AMUD_WORK:-$(dirname "$ROOT")/amud-work}"
-DEST="${1:?usage: deploy-windows.sh <windows folder> [--local]}"
-MODE="${2:-}"
+DEST="${1:?usage: deploy-windows.sh <windows folder> [--local] [--wrapper]}"
+shift
+MODE=""
+WITH_WRAPPER=""
+for a in "$@"; do
+  case "$a" in
+    --local) MODE=--local ;;
+    --wrapper) WITH_WRAPPER=1 ;;
+    *) echo "unknown option: $a"; exit 2 ;;
+  esac
+done
 
 if [ "$MODE" = --local ]; then
   AMDL="$WORK/dist/windows/amdl.exe"; COVERFIX="$WORK/dist/windows/coverfix.exe"; FROM="local build"
@@ -22,18 +33,18 @@ elif [ -z "$MODE" ]; then
   REL="$(ls -d "$WORK"/dist/release/v*/ 2>/dev/null | sort -V | tail -1)"
   [ -n "$REL" ] || { echo "no release build in $WORK/dist/release/: run release.sh (or --dry-run), or pass --local"; exit 1; }
   AMDL="$REL/amdl_windows_amd64.exe"; COVERFIX="$REL/coverfix_windows_amd64.exe"; FROM="release $(basename "$REL")"
-else
-  echo "unknown option: $MODE"; exit 2
 fi
 [ -f "$AMDL" ] && [ -f "$COVERFIX" ] || { echo "missing build: $AMDL / $COVERFIX"; exit 1; }
 
-mkdir -p "$DEST/wrapper-lite/qemu"
+mkdir -p "$DEST"
 cp "$AMDL" "$DEST/amdl.exe"
 cp "$COVERFIX" "$DEST/coverfix.exe"
 echo "[deploy] amdl.exe, coverfix.exe ($FROM)"
 
-if [ -d "$WORK/dist/wrapper-lite-win" ]; then
+if [ -n "$WITH_WRAPPER" ]; then
   W="$WORK/dist/wrapper-lite-win"
+  [ -d "$W" ] || { echo "no wrapper package in $W: run scripts/build-wrapper-win.sh"; exit 1; }
+  mkdir -p "$DEST/wrapper-lite/qemu"
   (cd "$W" && tar --exclude=./qemu/data.img -cf - .) | (cd "$DEST/wrapper-lite" && tar -xf -)
   if [ ! -f "$DEST/wrapper-lite/qemu/data.img" ]; then
     cp "$W/qemu/data.img" "$DEST/wrapper-lite/qemu/data.img"
