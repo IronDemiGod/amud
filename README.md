@@ -282,9 +282,10 @@ With wrapper-lite running, in the amdl folder:
 
 On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are skipped.
 
-In a terminal, an album or playlist shows as a live list: each track with its quality,
-a progress bar, size and speed, then processing, converting and `✔ done` (or `✖` and
-the reason, printed again at the end). `--no-live` prints plain lines instead.
+In a terminal, an album or playlist shows live bars, like coverfix: songs done, failures
+and the total speed, an overall bar with the time left, and one bar per track being
+downloaded or processed (quality, size, speed, or the step it is on). Tracks that failed
+are listed with the reason at the end. `--no-live` prints plain lines instead.
 `--timings` adds a summary of how long each step took and the overall speed, useful to
 tune the speed settings above.
 
