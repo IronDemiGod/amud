@@ -381,8 +381,9 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   else ISRC + album name (amdl's FLAC conversion drops the album ID). FLAC pictures are
   rewritten in place with the audio copied untouched. FLAC caps a picture at 16 MB, so
   too-large ones are retried as PNG 5000 → 4000 → … → 1000.
-  Up to 4 albums are processed at once (`--parallel N`), each album's messages printed
-  as one block in folder order. In a terminal, only live bars are shown: an overall bar
+  Up to 4 albums are processed at once (`--parallel N`), from all given folders together
+  (several artist folders share the slots), each album's messages printed as one block in
+  folder order. In a terminal, only live bars are shown: an overall bar
   (albums done, failures, time left) and one bar per album in progress (tracks embedded,
   current step); messages of albums with problems are printed when it is done.
   `--no-live` prints every album's result instead.
