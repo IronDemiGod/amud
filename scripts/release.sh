@@ -7,6 +7,9 @@
 #   scripts/release.sh v0.1.4.3            publish
 #   scripts/release.sh v0.1.4.3 --dry-run  build into ../amud-work/dist/release/ only
 #
+# It first checks zhaarey's upstream for commits the fork lacks and stops if
+# there are any (a dry run only warns); ALLOW_BEHIND_UPSTREAM=1 releases anyway.
+#
 # Tag scheme: v<upstream version>.<fork revision>, e.g. v0.1.4.1, v0.1.4.2,
 # then v0.1.5.1 after rebasing onto upstream v0.1.5. amdl's version check
 # ignores "-suffixes", so the revision has to be a fourth number.
@@ -32,6 +35,27 @@ slug() { sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##' <<<"$1"
 FORK="$(slug "$(git remote get-url origin)")"            # where the source lives
 SLUG="$(slug "$(git -C "$ROOT" remote get-url origin)")" # where releases go (amud)
 OWNER="${SLUG%%/*}"; NAME="${SLUG##*/}"
+
+# Upstream check: commits on zhaarey's main that the fork does not have yet.
+# Prints them; returns 1 when the fork is behind, 0 otherwise (also when
+# upstream cannot be reached, after a warning).
+upstream_behind() {
+  git remote get-url upstream >/dev/null 2>&1 || { echo "[upstream] no 'upstream' remote; not checked"; return 0; }
+  if ! timeout 20 git fetch -q upstream main 2>/dev/null; then
+    echo "[upstream] could not reach upstream; not checked"; return 0
+  fi
+  local n; n="$(git rev-list --count HEAD..upstream/main)"
+  [ "$n" -gt 0 ] || { echo "[upstream] up to date with upstream/main"; return 0; }
+  echo "[upstream] WARNING: upstream/main has $n commit(s) the fork does not have:"
+  git log --format='    %h %ad %s' --date=short -n 10 HEAD..upstream/main
+  [ "$n" -le 10 ] || echo "    ..."
+  echo "    merge them first: cd apple-music-downloader && git merge upstream/main"
+  return 1
+}
+
+if ! upstream_behind && [ -z "$DRY" ] && [ "${ALLOW_BEHIND_UPSTREAM:-}" != 1 ]; then
+  echo "[release] stopped: the fork is behind upstream (ALLOW_BEHIND_UPSTREAM=1 releases anyway)"; exit 1
+fi
 
 if [ -z "$DRY" ]; then
   [ -z "$(git status --porcelain)" ] || { echo "amdl has uncommitted changes; commit them first"; exit 1; }
