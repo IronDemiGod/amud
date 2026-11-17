@@ -229,12 +229,14 @@ Edit `config.yaml`. The settings that matter most:
 ```yaml
 general:
   lite-server: "http://127.0.0.1:12340"   # where wrapper-lite runs
+  parallel-downloads: 3                   # tracks downloaded at once (see "Speed" below)
 
 paths:
   alac: 'C:\Music'                        # where lossless downloads go (Linux: '/home/you/Music')
   atmos: 'C:\Music\Atmos'                 # Dolby Atmos downloads (--atmos)
   aac: 'C:\Music\AAC'                     # AAC downloads (--aac)
   playlist-album-folders: true            # sort playlist tracks into Artist/Album folders
+  work-dir: "auto"                        # where tracks are processed before they are saved
 
 metadata:
   artwork:
@@ -243,7 +245,21 @@ metadata:
 
 convert:
   after-download: false                   # true + format: "flac" to convert (needs ffmpeg)
+  parallel: 0                             # conversions at once; 0 = automatic
 ```
+
+**Speed.** One download from Apple runs at roughly 100-250 Mbit/s, so several at once
+fill a fast connection:
+
+- `parallel-downloads`: 3 is a good start; 5 on a fast PC with gigabit, 2 on a laptop
+  with 2 cores (converting to FLAC is then the limit, not the network). 1 downloads one
+  track after another.
+- `work-dir: "auto"`: tracks are downloaded and processed in memory (RAM on Linux; on
+  Windows files Windows keeps in memory), and only the finished file is written to the
+  save folder. This matters most when the save folder is slow (a USB or network drive).
+  `""` turns it off; a folder name uses that folder.
+- `convert.parallel`: FLAC conversions at once, each using one CPU core; automatic is
+  one per three CPU threads (2 to 6).
 
 On Windows, write paths in **single quotes**: inside double quotes `\U`, `\t` and
 the like are escape sequences and break the file.
@@ -266,6 +282,16 @@ With wrapper-lite running, in the amdl folder:
 
 On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are skipped.
 
+In a terminal, an album or playlist shows as a live list: each track with its quality,
+a progress bar, size and speed, then processing, converting and `✔ done` (or `✖` and
+the reason, printed again at the end). `--no-live` prints plain lines instead.
+`--timings` adds a summary of how long each step took and the overall speed, useful to
+tune the speed settings above.
+
+A run that is stopped halfway (Ctrl+C, a crash) leaves no half-finished files: tracks
+are only given their final name when they are complete, so the next run simply
+downloads the missing ones.
+
 ### 5. Fix covers of an existing library (optional)
 
 ```bash
@@ -278,9 +304,18 @@ On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are s
 
 `--cover` is the `cover.*` file saved in each album folder and `--embed` the picture put
 into every track: `jpg` or `png`, optionally with a size, e.g. `png`, `jpg3000`, `png5000`.
-Give one or both: the part you leave out is not touched. Without `--parallel`, 4 albums
-are done at once.
-Without a size you get the largest Apple has. coverfix works on folders made by amdl
+Give one or both: the part you leave out is not touched. Without a size you get the
+largest Apple has.
+
+```bash
+./coverfix --embed png --in "C:\Music" "ADO,Pink Floyd,King Gnu"   # some artists in one folder
+./coverfix --embed png --parallel 8 "C:\Music"                    # 8 albums at once (default 4)
+```
+
+`--in FOLDER` takes the names after it as folders inside FOLDER, separated by commas or
+spaces (album folders work too, e.g. `"ADO/Vivarium - Single"`). In a terminal coverfix
+shows live bars: albums done, time left, and one bar per album in progress; albums with
+problems are listed at the end. `--no-live` prints a line per album instead. coverfix works on folders made by amdl
 (it reads the album from the tracks' tags) and only changes pictures, never tags or audio.
 
 ### Updating
