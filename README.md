@@ -336,11 +336,42 @@ problems are listed at the end. `--no-live` prints a line per album instead. cov
 
 ### Updating
 
+**amdl** updates itself from this repo's releases:
+
 ```bash
-./amdl --update        # installs the latest release from this repo
+./amdl --check-update  # shows your version and whether a newer one exists
+./amdl --update        # downloads and installs it (checksum-verified)
 ```
 
-coverfix: download the new file from the [releases](https://github.com/IronDemiGod/amud/releases).
+**coverfix** does not update itself: download the zip for your computer from the
+[latest release](https://github.com/IronDemiGod/amud/releases/latest) and replace
+`coverfix` (and `amdl`, if you like) with the files from it. Your `config.yaml` is never
+touched by either way.
+
+**Your config** after an update: when a new version adds settings, amdl says so at start
+(`config.yaml is missing fields … Missing fields: convert.parallel, …`) and uses their
+defaults. To set one, add it under its section, indented like the others; the name
+before the dot is the section (`convert.parallel` is `parallel:` inside `convert:`):
+
+```yaml
+convert:
+  after-download: true
+  parallel: 0
+```
+
+**wrapper-lite** is a separate program; update it when downloads start failing with
+lite-server errors that a restart does not fix, or when its project has a new release:
+
+- **Linux native:** get the new package (or build it), stop the wrapper, run the same
+  `scripts/wrapper-linux.sh install …` again, start it. The login is kept.
+- **QEMU package (Windows, Mac, Linux):** stop it, unzip the new package over the old
+  folder **but keep your old `qemu/data.img`** (it holds your login), start it again.
+- **Docker:** `docker pull ghcr.io/worldobservationlog/wrapper-lite:latest`, then remove
+  and re-create the container with the same data folder (`-v …:/app/rootfs/data`) and
+  without `-e USERNAME/PASSWORD`; the login stays in the data folder.
+
+If wrapper-lite says it is not logged in (Apple signs sessions out now and then), log in
+again the same way as the first time.
 
 ## Troubleshooting
 
@@ -396,25 +427,53 @@ After a fresh clone the submodules sit on a bare commit ("detached HEAD"): run
 **Two-commit rule:** commit and **push** inside `apple-music-downloader/` first, then
 commit the moved bookmark in this repo (`git status` shows it as `new commits`) and push.
 
-**Update from upstream:**
+**Checking:** `release.sh` checks both upstreams before it builds: it lists commits on
+zhaarey's `main` that the fork lacks (and then stops a release; `ALLOW_BEHIND_UPSTREAM=1`
+releases anyway, a `--dry-run` only warns), and commits on wrapper's `lite` branch that the
+`wrapper/` submodule lacks (a note only, the wrapper is not released).
+
+**Update amdl from upstream (zhaarey):** merge, don't rebase: `main` is public and the
+default branch, so rewriting it would need a force-push.
 
 ```bash
 cd apple-music-downloader
 git remote add upstream https://github.com/zhaarey/apple-music-downloader.git   # once
 git fetch upstream
-git rebase upstream/main main
-git push --force-with-lease origin main
-cd .. && git commit -am "Bump amdl" && git push
+git log --oneline main..upstream/main      # what is new
+git merge upstream/main                    # resolve conflicts, keep both sides' intent
+go build ./... && go test ./...
+git push origin main
+cd .. && git add apple-music-downloader && git commit -m "Bump amdl: merge upstream" && git push
 ```
 
-**Release:** `scripts/release.sh v0.1.4.3` builds all platforms and publishes them as a
-release of **this repo (amud)**, not the fork (`--dry-run` to only build). The tag goes on
+Conflicts land in the files the fork changed (`internal/app/rip.go`, `media.go`, the
+config, the READMEs). Changes upstream makes inside the decryption code are taken as they
+are; the fork does not modify it. If upstream adds config settings, `config.yaml.example`
+gets them and amdl reports them as missing in existing configs.
+
+**Update the wrapper submodule:** it follows WorldObservationLog/wrapper's `lite` branch
+unmodified.
+
+```bash
+git -C wrapper fetch origin
+git -C wrapper log --oneline HEAD..origin/lite    # what is new
+git -C wrapper merge --ff-only origin/lite
+git add wrapper && git commit -m "Bump wrapper" && git push
+scripts/build-wrapper-win.sh                      # rebuild; then reinstall as in Updating
+```
+
+**Release:** `scripts/release.sh v0.1.4.4 --dry-run` builds amdl and coverfix for all six
+platforms into `../amud-work/dist/release/<tag>/`; without `--dry-run` it publishes them
+as a release of **this repo (amud)**, not the fork: each program as a single file (what
+`amdl --update` downloads), one zip per platform with both, and `checksums.txt`. It
+refuses unless both repos are committed and pushed on `main`, amud pins the fork's
+current commit, the tag is new, and the fork is not behind upstream. The tag goes on
 amud's current commit, and the binaries have amud built in as their `--update` source.
 Releases before v0.1.4.2 were on the fork; v0.1.4.1 was removed, so its binaries cannot
-`--update` (replace them by hand). Tags are `v<upstream version>.<fork revision>`;
-after rebasing onto upstream v0.1.5 the next one is `v0.1.5.1`. The wrapper-lite
-package is not released: it contains Apple's proprietary libraries and GPL'd QEMU
-binaries; build it with `build-wrapper-win.sh`.
+`--update` (replace them by hand). Tags are `v<upstream version>.<fork revision>`
+(never a `-suffix`, which `--update` would ignore); after merging upstream v0.1.5 the next
+one is `v0.1.5.1`. The wrapper-lite package is not released: it contains Apple's
+proprietary libraries and GPL'd QEMU binaries; build it with `build-wrapper-win.sh`.
 
 GitHub Actions are off on the fork: upstream's workflows would release on every push to `main`.
 
