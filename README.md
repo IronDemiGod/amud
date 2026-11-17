@@ -382,7 +382,9 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   rewritten in place with the audio copied untouched. FLAC caps a picture at 16 MB, so
   too-large ones are retried as PNG 5000 → 4000 → … → 1000.
   Up to 4 albums are processed at once (`--parallel N`), each album's messages printed
-  as one block in folder order.
+  as one block in folder order. In a terminal, finished albums scroll up as a log while
+  an overall bar (albums done, time left) and one bar per album in progress (tracks
+  embedded, current step) stay at the bottom; `--no-live` for plain output.
 - **Background processing**: once a track is downloaded, the next download starts right
   away; defrag, alac-fix, tagging and the optional ffmpeg conversion run on two
   background workers. Their messages are printed between tracks (`[background] …`), in
