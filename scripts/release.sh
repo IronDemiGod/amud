@@ -53,6 +53,24 @@ upstream_behind() {
   return 1
 }
 
+# Wrapper check: commits on WorldObservationLog/wrapper's lite branch that the
+# wrapper submodule does not have. A warning only (the wrapper is not released).
+wrapper_behind() {
+  local w="$1"
+  [ -d "$w/.git" ] || [ -f "$w/.git" ] || { echo "[wrapper] no wrapper submodule; not checked"; return 0; }
+  if ! timeout 20 git -C "$w" fetch -q origin lite 2>/dev/null; then
+    echo "[wrapper] could not reach the wrapper repo; not checked"; return 0
+  fi
+  local n; n="$(git -C "$w" rev-list --count HEAD..origin/lite)"
+  [ "$n" -gt 0 ] || { echo "[wrapper] up to date with origin/lite"; return 0; }
+  echo "[wrapper] NOTE: wrapper's lite branch has $n commit(s) the submodule does not have:"
+  git -C "$w" log --format='    %h %ad %s' --date=short -n 10 HEAD..origin/lite
+  [ "$n" -le 10 ] || echo "    ..."
+  echo "    update: git -C $w merge --ff-only origin/lite, then rebuild (scripts/build-wrapper-win.sh)"
+  return 1
+}
+wrapper_behind "$ROOT/wrapper" || true   # informational: the wrapper is not part of releases
+
 if ! upstream_behind && [ -z "$DRY" ] && [ "${ALLOW_BEHIND_UPSTREAM:-}" != 1 ]; then
   echo "[release] stopped: the fork is behind upstream (ALLOW_BEHIND_UPSTREAM=1 releases anyway)"; exit 1
 fi
