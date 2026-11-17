@@ -63,7 +63,23 @@ for target in linux/amd64 linux/arm64 windows/amd64 windows/arm64 darwin/amd64 d
   CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags="$LDFLAGS" -o "$OUT/amdl_${os}_${arch}${ext}" .
   CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags="-s -w" -o "$OUT/coverfix_${os}_${arch}${ext}" ./cmd/coverfix
 done
-(cd "$OUT" && sha256sum amdl_* coverfix_* > checksums.txt)
+# One zip per platform with both programs under plain names (amdl, coverfix;
+# .exe on Windows), executable bits kept. The single files stay too: they are
+# what `amdl --update` downloads.
+(cd "$OUT" && python3 - <<'PY'
+import os, stat, zipfile
+for t in ["linux_amd64", "linux_arm64", "windows_amd64", "windows_arm64", "darwin_amd64", "darwin_arm64"]:
+    ext = ".exe" if t.startswith("windows") else ""
+    with zipfile.ZipFile(f"amdl-coverfix_{t}.zip", "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for tool in ("amdl", "coverfix"):
+            zi = zipfile.ZipInfo.from_file(f"{tool}_{t}{ext}", arcname=tool + ext)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = (stat.S_IFREG | 0o755) << 16
+            with open(f"{tool}_{t}{ext}", "rb") as f:
+                z.writestr(zi, f.read())
+PY
+)
+(cd "$OUT" && sha256sum amdl_* coverfix_* amdl-coverfix_*.zip > checksums.txt)
 
 BASE="$(git describe --tags --abbrev=0 "$(git merge-base HEAD upstream/main)" 2>/dev/null || echo upstream)"
 cat > "$OUT/NOTES.md" <<NOTES
@@ -89,6 +105,19 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).
 
 ### Files
+Easiest: download the zip for your computer; it holds both programs (\`amdl\` and \`coverfix\`, \`.exe\` on Windows).
+
+| | zip (amdl + coverfix) |
+|---|---|
+| Windows x64 | \`amdl-coverfix_windows_amd64.zip\` |
+| Windows ARM | \`amdl-coverfix_windows_arm64.zip\` |
+| Linux x64 | \`amdl-coverfix_linux_amd64.zip\` |
+| Linux ARM | \`amdl-coverfix_linux_arm64.zip\` |
+| macOS Apple Silicon | \`amdl-coverfix_darwin_arm64.zip\` |
+| macOS Intel | \`amdl-coverfix_darwin_amd64.zip\` |
+
+The same programs as single files (these are what \`amdl --update\` uses):
+
 | | amdl | coverfix |
 |---|---|---|
 | Windows x64 | \`amdl_windows_amd64.exe\` | \`coverfix_windows_amd64.exe\` |
@@ -105,5 +134,5 @@ NOTES
 ls -l "$OUT"
 if [ -n "$DRY" ]; then echo "[release] dry run: nothing published"; exit 0; fi
 gh release create "$TAG" --repo "$SLUG" --target "$(git -C "$ROOT" rev-parse HEAD)" --title "$TAG" --notes-file "$OUT/NOTES.md" \
-  "$OUT"/amdl_* "$OUT"/coverfix_* "$OUT/checksums.txt"
+  "$OUT"/amdl_* "$OUT"/coverfix_* "$OUT"/amdl-coverfix_*.zip "$OUT/checksums.txt"
 echo "[release] published: https://github.com/$SLUG/releases/tag/$TAG"

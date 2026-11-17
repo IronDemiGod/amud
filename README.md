@@ -30,24 +30,27 @@ Three parts: amdl (+ coverfix), wrapper-lite, and a config file.
 
 ### 1. Download amdl and coverfix
 
-Get them from the **[latest release](https://github.com/IronDemiGod/amud/releases/latest)**:
+Get the zip for your computer from the **[latest release](https://github.com/IronDemiGod/amud/releases/latest)**;
+it holds both programs:
 
-| Your computer | amdl | coverfix |
-|---|---|---|
-| Windows (most PCs) | `amdl_windows_amd64.exe` | `coverfix_windows_amd64.exe` |
-| Windows on ARM | `amdl_windows_arm64.exe` | `coverfix_windows_arm64.exe` |
-| Linux (most PCs) | `amdl_linux_amd64` | `coverfix_linux_amd64` |
-| Linux ARM | `amdl_linux_arm64` | `coverfix_linux_arm64` |
-| Mac, Apple Silicon | `amdl_darwin_arm64` | `coverfix_darwin_arm64` |
-| Mac, Intel | `amdl_darwin_amd64` | `coverfix_darwin_amd64` |
+| Your computer | Download |
+|---|---|
+| Windows (most PCs) | `amdl-coverfix_windows_amd64.zip` |
+| Windows on ARM | `amdl-coverfix_windows_arm64.zip` |
+| Linux (most PCs) | `amdl-coverfix_linux_amd64.zip` |
+| Linux ARM | `amdl-coverfix_linux_arm64.zip` |
+| Mac, Apple Silicon | `amdl-coverfix_darwin_arm64.zip` |
+| Mac, Intel | `amdl-coverfix_darwin_amd64.zip` |
 
-Put both in one folder (for example `C:\amdl` or `~/amdl`) and rename them to
-`amdl.exe` / `coverfix.exe` (Windows) or `amdl` / `coverfix` (Linux, Mac). On Linux
-and Mac also make them executable:
+Unzip it into a folder of its own (for example `C:\amdl` or `~/amdl`): you get
+`amdl.exe` and `coverfix.exe` (Windows) or `amdl` and `coverfix` (Linux, Mac), ready to
+run. On a Mac, if it refuses to open them, run `xattr -d com.apple.quarantine amdl coverfix`
+in that folder.
 
-```bash
-chmod +x amdl coverfix
-```
+The release also has each program as a single file (`amdl_windows_amd64.exe`, …); those
+are what `amdl --update` downloads. If you use them directly, rename them to `amdl` /
+`coverfix` (`.exe` on Windows), and on Linux and Mac make them executable with
+`chmod +x amdl coverfix`.
 
 Optional: [ffmpeg](https://ffmpeg.org/download.html), only needed if you want amdl to
 convert downloads (e.g. to FLAC).
