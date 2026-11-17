@@ -14,6 +14,10 @@ What the fork adds:
   does), a full-size PNG is saved instead of Apple's re-compressed JPEG.
 - **coverfix**: re-downloads the covers of an existing library and replaces the
   pictures embedded in its `.flac` and `.m4a` files.
+- **Faster**: several tracks download at once, processing (tags, FLAC) runs in the
+  background and in memory, and already downloaded tracks of a big playlist are skipped
+  in moments.
+- **Live progress bars**: songs done, overall bar with time left, one bar per track.
 - **`amdl --update`** updates from this repo's releases.
 
 > Use this only with content you are entitled to access, and in line with Apple's
@@ -257,7 +261,9 @@ fill a fast connection:
 - `work-dir: "auto"`: tracks are downloaded and processed in memory (RAM on Linux; on
   Windows files Windows keeps in memory), and only the finished file is written to the
   save folder. This matters most when the save folder is slow (a USB or network drive).
-  `""` turns it off; a folder name uses that folder.
+  `""` turns it off; a folder name uses that folder. Saving to another computer's shared
+  folder (Samba/SMB) works well this way: on gigabit Ethernet each finished track takes
+  well under 2 s to copy, while the next ones keep downloading.
 - `convert.parallel`: FLAC conversions at once, each using one CPU core; automatic is
   one per three CPU threads (2 to 6).
 
@@ -286,8 +292,12 @@ In a terminal, an album or playlist shows live bars, like coverfix: songs done, 
 and the total speed, an overall bar with the time left, and one bar per track being
 downloaded or processed (quality, size, speed, or the step it is on). Finished, failed and
 already downloaded (skipped) tracks keep their bar for a few seconds (the newest 3).
-Tracks that failed
-are listed with the reason at the end. `--no-live` prints plain lines instead.
+Tracks that failed are listed with the reason at the end. `--no-live` prints plain lines
+instead.
+
+Running a playlist again only downloads what is missing, and checking the rest is quick
+(a 60-song playlist that was fully downloaded took under a second). An album folder that
+already has its cover keeps it; use coverfix (step 5) to refresh covers.
 `--timings` adds a summary of how long each step took and the overall speed, useful to
 tune the speed settings above.
 
@@ -411,12 +421,17 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   its album and downloaded through the normal album path, into `Artist/Album/` with the
   album's cover and tags. Tracks are grouped by album, so download order follows albums.
   Music videos in a playlist go to the MV folder. The optional `.m3u8` playlist file goes
-  into the format folder.
+  into the format folder. The album of each track is read from its catalog URL
+  (`…/album/name/<id>?i=…`; the API is asked only when it has none), so a big playlist
+  starts at once. The whole playlist is one live list, kept open across its albums, and
+  6 workers fetch up to 12 albums ahead (details, and covers for album folders that have
+  none), so the parallel downloads stay busy even when every track is from another album.
 - **Covers**: `artwork.format` defaults to `"original"`. Apple answers 403 for the
   source-file URL (`a5.mzstatic.com/us/r1000/0/…`, every album tested in Nov 2026), so
   amdl then saves a full-size PNG (lossless, ~10-15 MB) instead of Apple's re-encoded
   JPEG, and removes a stale `cover.jpg`. With `artwork.embed: true` that PNG is also
-  embedded in every track.
+  embedded in every track. An album folder that already has its cover keeps it (it is
+  not downloaded again on every run); coverfix replaces covers.
 - **Windows folder creation**: `fsutil.MkdirAll` accepts parent folders Windows reports
   as existing but refuses to stat, so the real error is shown.
 - **coverfix** (`cmd/coverfix`): finds each album by iTunes album ID (.m4a), else UPC,
@@ -448,17 +463,21 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   4 on a 12-thread PC; `convert.parallel` sets it, 0 = this automatic rule); each
   conversion's settings and output are unchanged. amdl waits for earlier tracks before showing a
   `--select` prompt.
-- **Live progress list**: in a terminal, an album or playlist is shown as a list that
-  redraws in place (like `docker pull`), two lines per track: number, title, artist and
-  quality (e.g. `ALAC 24-bit/96 kHz`), then a bar with %, size and speed, or the step
-  (processing, converting), `✔ done` or `✖` with the reason. The header shows the tracks
-  done and the combined download speed. A long list folds its finished tracks into one
-  line so it always fits the window. Progress is read from the download worker's
-  progress bar output; the download code is unchanged. Messages of failed tracks are
-  printed after the list. Plain output with `--no-live`, `--debug`, `--json`, when the
-  output is not a terminal, or when the list contains music videos.
+- **Live progress bars**: in a terminal, an album or playlist is shown like coverfix: a
+  header (songs done, failed, downloading, combined Mbit/s), an overall bar with the time
+  left, and one line per track being downloaded or processed: number, title, artist, a
+  bar with %, size and speed or the step (processing, converting), and the quality (e.g.
+  `ALAC 24-bit/96 kHz`). Finished, failed and already downloaded tracks keep their line
+  for 3 s (the newest 3). Progress is read from the download worker's progress bar
+  output; the download code is unchanged. While the bars are shown, other output goes
+  through a pipe and is drawn above them, so it can't break the redraw. Messages of
+  failed tracks are printed after the list. Plain output with `--no-live`, `--debug`,
+  `--json`, when the output is not a terminal, or when the list contains music videos.
   Frames are drawn with the cursor hidden and as one synchronized update, so they don't
-  flicker over SSH; messages that would land under the list are kept for failed tracks.
+  flicker over SSH.
+- **Quick checks of downloaded tracks**: the hi-res stream is asked from lite-server only
+  for tracks that are actually downloaded (unless the song file name uses `{Quality}`),
+  not before the "already exists" check.
 - **Work folder (`paths.work-dir`, default `"auto"`)**: tracks are downloaded and
   processed (defrag, alac-fix, tags, FLAC) in a work folder, and only the finished file is
   moved to the save folder. `"auto"` uses RAM (`/dev/shm/amdl`) on Linux; on Windows a
