@@ -272,10 +272,14 @@ On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are s
 ./coverfix --help
 ./coverfix --cover png --embed jpg3000 -n "C:\Music"   # preview: shows what it would do
 ./coverfix --cover png --embed jpg3000 "C:\Music"      # do it
+./coverfix --embed png "C:\Music"                     # only the embedded pictures
+./coverfix --cover png "C:\Music"                     # only the cover files
 ```
 
 `--cover` is the `cover.*` file saved in each album folder and `--embed` the picture put
 into every track: `jpg` or `png`, optionally with a size, e.g. `png`, `jpg3000`, `png5000`.
+Give one or both: the part you leave out is not touched. Without `--parallel`, 4 albums
+are done at once.
 Without a size you get the largest Apple has. coverfix works on folders made by amdl
 (it reads the album from the tracks' tags) and only changes pictures, never tags or audio.
 
