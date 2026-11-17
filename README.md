@@ -270,8 +270,8 @@ On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are s
 
 ```bash
 ./coverfix --help
-./coverfix --cover=png --embed=jpg3000 -n "C:\Music"   # preview: shows what it would do
-./coverfix --cover=png --embed=jpg3000 "C:\Music"      # do it
+./coverfix --cover png --embed jpg3000 -n "C:\Music"   # preview: shows what it would do
+./coverfix --cover png --embed jpg3000 "C:\Music"      # do it
 ```
 
 `--cover` is the `cover.*` file saved in each album folder and `--embed` the picture put
@@ -387,7 +387,7 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   current step); messages of albums with problems are printed when it is done.
   `--no-live` prints every album's result instead.
   `--in FOLDER` takes the folder arguments as names inside FOLDER, comma-separated
-  allowed: `coverfix --cover=png --embed=png --in "C:/Users/Admin/Music" "ADO,Pink Floyd"`.
+  allowed: `coverfix --cover png --embed png --in "C:/Users/Admin/Music" "ADO,Pink Floyd"`.
 - **Background processing**: once a track is downloaded, the next download starts right
   away; defrag, alac-fix, tagging and the optional ffmpeg conversion run on two
   background workers. Their messages are printed between tracks (`[background] …`), in
