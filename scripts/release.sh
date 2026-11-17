@@ -82,7 +82,7 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - \`paths.work-dir\` (default \`auto\`: RAM on Linux, kept in memory on Windows): process tracks in a fast folder, then move only the finished file to the save folder.
 - Interrupted runs no longer leave half-finished files that the next run skips (temporary \`.part\` names until a file is complete).
 - \`--timings\`: shows how long each stage of a download takes.
-- coverfix: several albums at once (\`--parallel\`), with live progress bars (\`--no-live\` for plain output).
+- coverfix: several albums at once (\`--parallel\`), with live progress bars (\`--no-live\` for plain output), and \`--in FOLDER\` for a list of artist/album names inside one folder.
 - \`amdl --update\` updates from [these releases](https://github.com/$SLUG/releases).
 
 ### Files

@@ -385,6 +385,8 @@ GitHub Actions are off on the fork: upstream's workflows would release on every 
   as one block in folder order. In a terminal, finished albums scroll up as a log while
   an overall bar (albums done, time left) and one bar per album in progress (tracks
   embedded, current step) stay at the bottom; `--no-live` for plain output.
+  `--in FOLDER` takes the folder arguments as names inside FOLDER, comma-separated
+  allowed: `coverfix --cover=png --embed=png --in "C:/Users/Admin/Music" "ADO,Pink Floyd"`.
 - **Background processing**: once a track is downloaded, the next download starts right
   away; defrag, alac-fix, tagging and the optional ffmpeg conversion run on two
   background workers. Their messages are printed between tracks (`[background] …`), in
