@@ -78,7 +78,10 @@ Builds of [this fork](https://github.com/$FORK) of zhaarey/apple-music-downloade
 - Windows: clearer errors when a save folder cannot be created.
 - Faster: after each download, the next one starts right away; processing, tagging and conversion to FLAC run in the background.
 - \`general.parallel-downloads\`: download several tracks at once (e.g. 3) on a fast connection.
-- Live progress list for albums and playlists, with quality, progress and speed per track (\`--no-live\` for plain output).
+- Live progress bars for albums and playlists, like coverfix: songs done and time left, plus a bar per track with quality, progress and speed (\`--no-live\` for plain output).
+- Big playlists with \`playlist-album-folders\` start at once and keep all parallel downloads busy (next albums and covers fetched ahead).
+- Running a playlist or album again is quick: already downloaded tracks are skipped in moments, and an album folder that has its cover keeps it (coverfix refreshes covers).
+- \`convert.parallel\`: how many FLAC conversions run at once (0 = automatic).
 - \`paths.work-dir\` (default \`auto\`: RAM on Linux, kept in memory on Windows): process tracks in a fast folder, then move only the finished file to the save folder.
 - Interrupted runs no longer leave half-finished files that the next run skips (temporary \`.part\` names until a file is complete).
 - \`--timings\`: shows how long each stage of a download takes.
