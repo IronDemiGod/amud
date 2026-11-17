@@ -284,7 +284,8 @@ On Windows use `.\amdl.exe` instead of `./amdl`. Already downloaded tracks are s
 
 In a terminal, an album or playlist shows live bars, like coverfix: songs done, failures
 and the total speed, an overall bar with the time left, and one bar per track being
-downloaded or processed (quality, size, speed, or the step it is on). Tracks that failed
+downloaded or processed (quality, size, speed, or the step it is on). Finished, failed and
+already downloaded (skipped) tracks keep their bar for a few seconds. Tracks that failed
 are listed with the reason at the end. `--no-live` prints plain lines instead.
 `--timings` adds a summary of how long each step took and the overall speed, useful to
 tune the speed settings above.
